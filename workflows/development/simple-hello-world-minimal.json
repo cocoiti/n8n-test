@@ -1,0 +1,58 @@
+{
+  "name": "Simple Hello World",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "🚀 Manual Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "id": "manual-trigger-001"
+    },
+    {
+      "parameters": {
+        "functionCode": "// === Simple Hello World Data Generator ===\n// n8n入門用のシンプルなデータ生成Function\n\n// 現在時刻の取得\nconst now = new Date();\nconst timestamp = now.toISOString();\nconst japaneseTime = now.toLocaleString('ja-JP', {\n  timeZone: 'Asia/Tokyo',\n  year: 'numeric',\n  month: '2-digit',\n  day: '2-digit',\n  hour: '2-digit',\n  minute: '2-digit',\n  second: '2-digit'\n});\n\n// ランダムな実行番号生成（1-999）\nconst executionCount = Math.floor(Math.random() * 999) + 1;\n\n// ランダムメッセージの配列\nconst messages = [\n  \"🎉 n8nワークフローが正常に実行されました！\",\n  \"👋 Hello World from n8n!\",\n  \"🤝 Claude Codeとn8nの連携テスト成功\",\n  \"✨ シンプルなワークフローの完成です\",\n  \"🚀 n8n入門ワークフローへようこそ！\"\n];\n\n// ランダムにメッセージを選択\nconst selectedMessage = messages[Math.floor(Math.random() * messages.length)];\n\n// 学習ポイントのヒント\nconst learningTips = [\n  \"💡 Function NodeでJavaScriptが実行できます\",\n  \"📊 items[0].jsonでデータにアクセス\",\n  \"🔄 return文で次のノードにデータを渡す\",\n  \"🐛 console.logでデバッグ可能\"\n];\n\nconst tip = learningTips[Math.floor(Math.random() * learningTips.length)];\n\n// 出力データの構造化\nreturn [{\n  json: {\n    // 基本情報\n    timestamp: timestamp,\n    japaneseTime: japaneseTime,\n    executionId: `exec_${executionCount}`,\n    \n    // メッセージ情報\n    message: selectedMessage,\n    learningTip: tip,\n    \n    // ワークフロー情報\n    workflow: {\n      name: \"Simple Hello World\",\n      version: \"1.0.0\",\n      type: \"sample\",\n      complexity: \"beginner\"\n    },\n    \n    // ステータス情報\n    status: \"success\",\n    nodeExecuted: \"Data Generator\",\n    \n    // 統計情報\n    stats: {\n      executionNumber: executionCount,\n      totalNodes: 3,\n      currentNode: 2\n    }\n  }\n}];"
+      },
+      "name": "📊 Generate Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "id": "data-generator-001"
+    },
+    {
+      "parameters": {
+        "functionCode": "// === Simple Hello World Log Output ===\n// 生成されたデータを整形してログ出力\n\n// 入力データの取得\nconst inputData = items[0].json;\n\n// ログメッセージの整形\nconst separator = \"=\".repeat(50);\nconst logMessage = `\n${separator}\n🎯 n8n Simple Hello World - 実行完了！\n${separator}\n\n📅 実行時刻: ${inputData.japaneseTime}\n🆔 実行ID: ${inputData.executionId}\n💬 メッセージ: ${inputData.message}\n💡 学習ヒント: ${inputData.learningTip}\n\n📊 ワークフロー情報:\n   名前: ${inputData.workflow.name}\n   バージョン: ${inputData.workflow.version}\n   難易度: ${inputData.workflow.complexity}\n\n📈 実行統計:\n   実行番号: #${inputData.stats.executionNumber}\n   総ノード数: ${inputData.stats.totalNodes}\n   現在のノード: ${inputData.stats.currentNode}/${inputData.stats.totalNodes}\n\n✅ ステータス: ${inputData.status.toUpperCase()}\n\n${separator}\n🎉 おめでとうございます！n8nの基本操作を体験できました！\n   次は他のノードタイプも試してみましょう。\n${separator}\n`;\n\n// コンソールにログ出力\nconsole.log(logMessage);\n\n// 実行完了データの生成\nconst completionTime = new Date().toISOString();\n\n// 最終出力データ\nreturn [{\n  json: {\n    // 元のデータを継承\n    ...inputData,\n    \n    // ログ情報追加\n    log: {\n      message: logMessage,\n      outputTime: completionTime,\n      consoleOutput: true\n    },\n    \n    // 完了情報\n    completion: {\n      status: \"completed\",\n      finalNode: true,\n      success: true,\n      executionTime: completionTime\n    },\n    \n    // 学習達成情報\n    achievements: [\n      \"✅ Manual Triggerの使用\",\n      \"✅ Function Nodeでのデータ生成\",\n      \"✅ JavaScriptコードの実行\",\n      \"✅ Console.logの使用\",\n      \"✅ JSONデータ構造の理解\"\n    ]\n  }\n}];"
+      },
+      "name": "📝 Output Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "log-output-001"
+    }
+  ],
+  "connections": {
+    "🚀 Manual Start": {
+      "main": [
+        [
+          {
+            "node": "📊 Generate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Generate Data": {
+      "main": [
+        [
+          {
+            "node": "📝 Output Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

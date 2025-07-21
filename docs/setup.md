@@ -125,8 +125,14 @@ cd n8n-claude-kit
 mkdir -p {\
   workflows/{production,development,templates,tests},\
   workflows/specifications/{requirements,designs,implementations},\
-  docs,\
-  scripts\
+  templates/specifications,\
+  tests/{unit,integration,e2e,data,fixtures,scripts},\
+  tests/data/{mock,samples},\
+  config,\
+  scripts,\
+  backups,\
+  logs,\
+  docs\
 }
 ```
 

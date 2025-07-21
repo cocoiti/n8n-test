@@ -36,6 +36,13 @@ Makefileを使用してn8nワークフローをAPI経由で効率的にアップ
 - **n8n**: 起動済みのn8nインスタンス
 - **Claude Code**: ワークフロー生成とアップロード連携用
 
+### 実装状況
+- ✅ **Makefile**: 基本コマンド実装済み
+- ✅ **設定管理**: テンプレートベース設定システム
+- ✅ **バックアップ**: 基本的なバックアップ機能
+- 🚧 **アップロード機能**: 将来実装予定
+- 🚧 **スクリプト**: scripts/ディレクトリは将来実装
+
 ### n8n API設定
 - n8n REST APIが有効
 - 適切な認証設定（Basic Auth等）
@@ -64,22 +71,34 @@ make test-workflow WORKFLOW=filename   # ワークフローテスト
 
 ### ディレクトリ構造
 ```
-project/
+n8n-claude-kit/
 ├── Makefile                    # メインMakefile
-├── config/
-│   ├── dev.env                # 開発環境設定
-│   ├── prod.env               # 本番環境設定
-│   └── api.conf               # API設定
-├── workflows/
-│   ├── development/           # 開発用ワークフロー
-│   ├── production/           # 本番用ワークフロー
-│   └── templates/            # テンプレート
-├── backups/                  # バックアップ
-├── logs/                     # 実行ログ
-└── scripts/                  # ヘルパースクリプト
-    ├── upload.sh             # アップロードスクリプト
-    ├── validate.sh           # 検証スクリプト
-    └── backup.sh             # バックアップスクリプト
+├── config/                     # 環境設定ファイル
+│   ├── dev.env.example        # 開発環境設定テンプレート
+│   ├── prod.env.example       # 本番環境設定テンプレート
+│   ├── dev.env                # 開発環境実際の設定（gitignore）
+│   ├── prod.env               # 本番環境実際の設定（gitignore）
+│   └── README.md              # 設定ガイド
+├── workflows/                  # n8nワークフローファイル
+│   ├── production/            # 本番環境用ワークフロー
+│   ├── development/           # 開発環境用ワークフロー
+│   ├── templates/             # 再利用可能なテンプレート
+│   ├── tests/                # テスト用ワークフロー
+│   └── specifications/       # ワークフロー仕様書
+│       ├── requirements/      # 要件定義書
+│       ├── designs/          # 設計書
+│       └── implementations/   # 実装仕様書
+├── templates/                 # コマンドテンプレート
+│   └── specifications/       # 仕様書テンプレート
+├── tests/                     # テストファイル
+│   ├── unit/                 # ユニットテスト
+│   ├── integration/          # 統合テスト
+│   ├── e2e/                  # エンドツーエンドテスト
+│   └── data/                 # テストデータ
+├── scripts/                   # ユーティリティスクリプト（将来実装）
+├── backups/                   # ワークフローバックアップ
+├── logs/                      # 実行ログ
+└── docs/                      # ドキュメント
 ```
 
 ## 使用方法

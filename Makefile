@@ -3,11 +3,13 @@
 
 # デフォルト設定
 DEFAULT_ENV := dev
+ENV ?= $(DEFAULT_ENV)
 WORKFLOW_DIR := workflows
 CONFIG_DIR := config
 BACKUP_DIR := backups
 LOG_DIR := logs
 SCRIPTS_DIR := scripts
+TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
 
 # 環境変数の読み込み
 ifneq (,$(wildcard $(CONFIG_DIR)/$(ENV).env))
@@ -21,17 +23,40 @@ help: ## ヘルプメッセージを表示
 	@echo "n8n Claude Code Development Kit"
 	@echo ""
 	@echo "利用可能なコマンド:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
 # セットアップコマンド
-.PHONY: setup
-setup: ## プロジェクトの初期セットアップ
-	@echo "Setting up n8n Claude Code Development Kit..."
-	@mkdir -p $(WORKFLOW_DIR)/{production,development,templates,tests}
-	@mkdir -p $(WORKFLOW_DIR)/specifications/{requirements,designs,implementations}
-	@mkdir -p $(CONFIG_DIR) $(BACKUP_DIR) $(LOG_DIR) $(SCRIPTS_DIR)
-	@mkdir -p tests/{unit,integration,e2e,data,fixtures,scripts}
-	@echo "Setup completed!"
+.PHONY: init-config
+init-config: ## 設定ファイルを作成（テンプレートからコピー）
+	@echo "Creating configuration files from templates..."
+	@mkdir -p $(CONFIG_DIR)
+	@if [ ! -f $(CONFIG_DIR)/dev.env ]; then \
+		if [ -f $(CONFIG_DIR)/dev.env.example ]; then \
+			cp $(CONFIG_DIR)/dev.env.example $(CONFIG_DIR)/dev.env; \
+			echo "✓ Created $(CONFIG_DIR)/dev.env from template"; \
+			echo "⚠️  Please edit $(CONFIG_DIR)/dev.env with your actual configuration"; \
+		else \
+			echo "✗ Template file $(CONFIG_DIR)/dev.env.example not found"; \
+		fi \
+	else \
+		echo "✓ $(CONFIG_DIR)/dev.env already exists"; \
+	fi
+	@if [ ! -f $(CONFIG_DIR)/prod.env ]; then \
+		if [ -f $(CONFIG_DIR)/prod.env.example ]; then \
+			cp $(CONFIG_DIR)/prod.env.example $(CONFIG_DIR)/prod.env; \
+			echo "✓ Created $(CONFIG_DIR)/prod.env from template"; \
+			echo "⚠️  Please edit $(CONFIG_DIR)/prod.env with your actual configuration"; \
+		else \
+			echo "✗ Template file $(CONFIG_DIR)/prod.env.example not found"; \
+		fi \
+	else \
+		echo "✓ $(CONFIG_DIR)/prod.env already exists"; \
+	fi
+	@echo ""
+	@echo "🔒 SECURITY NOTICE:"
+	@echo "   - Config files are gitignored and won't be committed"
+	@echo "   - Edit the created files with your actual credentials"
+	@echo "   - Never commit files containing real passwords or API keys"
 
 # 環境チェック
 .PHONY: check-env
@@ -42,6 +67,34 @@ check-env: ## 環境設定をチェック
 	@command -v curl >/dev/null 2>&1 || { echo "Error: curl is not installed"; exit 1; }
 	@command -v jq >/dev/null 2>&1 || { echo "Error: jq is not installed"; exit 1; }
 	@echo "Environment check completed!"
+
+.PHONY: test-connection
+test-connection: ## n8nインスタンスへの接続をテスト
+	@echo "Testing connection to n8n instance..."
+	@echo "Environment: $(ENV)"
+	@if [ -f "$(CONFIG_DIR)/$(ENV).env" ]; then \
+		echo "✓ Configuration file found: $(CONFIG_DIR)/$(ENV).env"; \
+		source $(CONFIG_DIR)/$(ENV).env; \
+		echo "✓ Testing API connection to: $$N8N_BASE_URL/api/v1"; \
+		if [ ! -z "$$N8N_API_KEY" ]; then \
+			echo "✓ API Key found, testing API access..."; \
+			if curl -f -s -H "X-N8N-API-KEY: $$N8N_API_KEY" "$$N8N_BASE_URL/api/v1/workflows" | jq empty >/dev/null 2>&1; then \
+				echo "✅ API Authentication: OK"; \
+				WORKFLOW_COUNT=$$(curl -s -H "X-N8N-API-KEY: $$N8N_API_KEY" "$$N8N_BASE_URL/api/v1/workflows" | jq '.data | length' 2>/dev/null || echo "0"); \
+				echo "✓ Workflows found: $$WORKFLOW_COUNT"; \
+			else \
+				echo "❌ API Authentication: Failed"; \
+				echo "   Check your N8N_API_KEY in $(CONFIG_DIR)/$(ENV).env"; \
+			fi; \
+		else \
+			echo "⚠️  No API Key configured"; \
+			echo "   Set N8N_API_KEY in $(CONFIG_DIR)/$(ENV).env for API access"; \
+		fi; \
+	else \
+		echo "❌ Configuration file not found: $(CONFIG_DIR)/$(ENV).env"; \
+		echo "   Run 'make init-config' to create configuration files"; \
+		exit 1; \
+	fi
 
 # n8n関連コマンド
 .PHONY: n8n-start
@@ -68,15 +121,25 @@ validate: ## ワークフローJSONを検証 (make validate WORKFLOW=filename.js
 		exit 1; \
 	fi
 	@echo "Validating workflow: $(WORKFLOW)"
-	@jq empty $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW) && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
+	@if [ ! -f "$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" ]; then \
+		echo "✗ File not found: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"; \
+		exit 1; \
+	fi
+	@jq empty "$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
 
 # バックアップコマンド
 .PHONY: backup
 backup: ## 既存ワークフローをバックアップ
 	@echo "Creating backup..."
-	@mkdir -p $(BACKUP_DIR)/$(shell date +%Y%m%d_%H%M%S)
-	@curl -s http://localhost:5678/rest/workflows | jq '.data[]' > $(BACKUP_DIR)/$(shell date +%Y%m%d_%H%M%S)/workflows_backup.json
-	@echo "Backup created in $(BACKUP_DIR)"
+	@mkdir -p $(BACKUP_DIR)/$(TIMESTAMP)
+	@if curl -s http://localhost:5678/rest/workflows >/dev/null 2>&1; then \
+		curl -s http://localhost:5678/rest/workflows | jq '.data[]' > $(BACKUP_DIR)/$(TIMESTAMP)/workflows_backup.json; \
+		echo "✓ Backup created: $(BACKUP_DIR)/$(TIMESTAMP)/workflows_backup.json"; \
+	else \
+		echo "✗ Error: Cannot connect to n8n instance at http://localhost:5678"; \
+		rmdir $(BACKUP_DIR)/$(TIMESTAMP) 2>/dev/null || true; \
+		exit 1; \
+	fi
 
 # クリーンアップコマンド
 .PHONY: clean
@@ -114,7 +177,7 @@ claude-version: ## Claude Codeのバージョンを確認
 status: ## プロジェクトの状態を表示
 	@echo "=== n8n Claude Code Development Kit Status ==="
 	@echo "Project Directory: $(PWD)"
-	@echo "Environment: $(or $(ENV),$(DEFAULT_ENV))"
+	@echo "Environment: $(ENV)"
 	@echo ""
 	@echo "=== Directory Structure ==="
 	@find . -type d -name ".git" -prune -o -type d -print | head -20
@@ -124,16 +187,58 @@ status: ## プロジェクトの状態を表示
 	@echo ""
 	@make --no-print-directory check-env
 
-# 実装予定のアップロード機能（将来実装）
+# ワークフローアップロード機能
 .PHONY: upload
-upload: ## ワークフローをアップロード (実装予定)
-	@echo "Upload functionality will be implemented in future versions"
-	@echo "Please refer to docs/workflow-upload.md for detailed specifications"
+upload: ## ワークフローをアップロード (make upload WORKFLOW=filename.json ENV=dev)
+	@if [ -z "$(WORKFLOW)" ]; then \
+		echo "Error: WORKFLOW parameter is required"; \
+		echo "Usage: make upload WORKFLOW=filename.json [ENV=dev]"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" ]; then \
+		echo "✗ File not found: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"; \
+		exit 1; \
+	fi
+	@echo "Uploading workflow to $(ENV) environment..."
+	@echo "File: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"
+	@if [ "$(ENV)" = "development" ]; then \
+		CONFIG_FILE="$(CONFIG_DIR)/dev.env"; \
+	else \
+		CONFIG_FILE="$(CONFIG_DIR)/$(ENV).env"; \
+	fi; \
+	if [ -f "$$CONFIG_FILE" ]; then \
+		source $$CONFIG_FILE; \
+		echo "Target: $$N8N_BASE_URL"; \
+		if curl -f -s -X POST \
+			-H "X-N8N-API-KEY: $$N8N_API_KEY" \
+			-H "Content-Type: application/json" \
+			-d @"$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" \
+			"$$N8N_BASE_URL/api/v1/workflows" >/dev/null 2>&1; then \
+			echo "✅ Upload successful!"; \
+			echo "Check your n8n instance to see the imported workflow"; \
+		else \
+			echo "❌ Upload failed"; \
+			echo "Attempting detailed error response:"; \
+			curl -X POST \
+				-H "X-N8N-API-KEY: $$N8N_API_KEY" \
+				-H "Content-Type: application/json" \
+				-d @"$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" \
+				"$$N8N_BASE_URL/api/v1/workflows" 2>/dev/null | jq . || echo "Could not parse error response"; \
+			echo ""; \
+			echo "💡 Alternative: Manual import via n8n GUI"; \
+			echo "   1. Open $$N8N_BASE_URL"; \
+			echo "   2. New Workflow → Import from File"; \
+			echo "   3. Select: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"; \
+		fi; \
+	else \
+		echo "❌ Configuration file not found: $$CONFIG_FILE"; \
+		echo "   Run 'make init-config' to create configuration files"; \
+	fi
 
 .PHONY: upload-dev
-upload-dev: ## 開発環境にアップロード (実装予定)
-	@echo "Development upload functionality will be implemented in future versions"
+upload-dev: ## 開発環境にアップロード (make upload-dev WORKFLOW=filename.json)
+	@$(MAKE) upload WORKFLOW=$(WORKFLOW) ENV=development
 
 .PHONY: upload-prod  
-upload-prod: ## 本番環境にアップロード (実装予定)
-	@echo "Production upload functionality will be implemented in future versions"
+upload-prod: ## 本番環境にアップロード (make upload-prod WORKFLOW=filename.json)
+	@$(MAKE) upload WORKFLOW=$(WORKFLOW) ENV=prod
