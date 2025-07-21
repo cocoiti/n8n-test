@@ -25,7 +25,8 @@ make list-workflows                         # n8nインスタンス上のワー�
 
 ### 仕様管理
 ```bash
-make generate-spec WORKFLOW=name SPEC_ID=001   # 仕様書テンプレートを生成
+# 仕様書作成はClaude Commandを使用（docs/claude-commands.md参照）
+make generate-spec                              # Claude Commandへの移行案内
 ```
 
 ### メンテナンス
@@ -81,13 +82,27 @@ workflows/
 
 ## 開発ワークフロー
 
-1. **環境セットアップ**: `make init-config` で設定ファイルを作成し、APIキーを設定
-2. **接続確認**: `make test-connection` でn8n APIの接続と認証を確認
-3. **仕様書作成**: `make generate-spec WORKFLOW=name SPEC_ID=001` を使用して構造化されたドキュメントを作成
-4. **ワークフロー実装**: `workflows/development/` にワークフローJSONを作成
-5. **検証**: `make validate WORKFLOW=filename.json` でJSON構造をチェック
-6. **アップロードテスト**: `make upload-dev WORKFLOW=filename.json` を使用
-7. **デプロイ**: 本番デプロイには `make upload-prod WORKFLOW=filename.json` を使用
+### 新規プロジェクト作成時
+1. **Claude Command**: `docs/claude-commands.md`の「新規n8nプロジェクト初期化」コマンドを使用
+2. **環境セットアップ**: `make init-config` で設定ファイルを作成し、APIキーを設定
+3. **接続確認**: `make test-connection` でn8n APIの接続と認証を確認
+
+### ワークフロー開発時
+1. **Claude Command**: `docs/claude-commands.md`の「新規ワークフロー作成（仕様書付き）」を使用
+   - 要件定義書、設計書、実装仕様書が自動生成される
+   - ワークフローJSONファイルも同時に作成される
+2. **検証**: `make validate WORKFLOW=filename.json` でJSON構造をチェック
+3. **アップロードテスト**: `make upload-dev WORKFLOW=filename.json` を使用
+4. **デプロイ**: 本番デプロイには `make upload-prod WORKFLOW=filename.json` を使用
+
+### 既存仕様書からの実装時
+1. **Claude Command**: `docs/claude-commands.md`の「仕様書からワークフロー実装」を使用
+2. **検証とデプロイ**: 上記と同様の手順
+
+### 推奨アプローチ
+- **プロジェクト管理**: Claude Commandで自動化
+- **ワークフロー作成**: Claude Commandで仕様書から実装まで一貫して作成
+- **デプロイ**: Makeコマンドで環境管理とアップロード
 
 ## 重要な注意事項
 

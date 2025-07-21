@@ -56,11 +56,12 @@ n8n-claude-kit/
 
 ## ドキュメント
 
-- [n8nワークフロー開発ガイド](./n8n-workflow-guide.md)
-- [Claude Codeコマンドテンプレート](./claude-commands.md)
-- [ワークフロー仕様書作成ガイド](./workflow-specifications.md)
-- [ワークフローアップロード機能](./workflow-upload.md)
-- [セットアップ手順](./setup.md)
+- [Claude Code開発ガイド](../CLAUDE.md) - **重要**: Claude Code使用時の必読ガイド
+- [Claude Codeコマンドテンプレート](./claude-commands.md) - 効率的な開発コマンド集
+- [セットアップ手順](./setup.md) - 初期環境構築手順
+- [n8nワークフロー開発ガイド](./n8n-workflow-guide.md) - ワークフロー開発の詳細
+- [ワークフロー仕様書作成ガイド](./workflow-specifications.md) - 仕様書管理システム
+- [ワークフローアップロード機能](./workflow-upload.md) - 自動デプロイ機能
 
 ## ライセンス
 

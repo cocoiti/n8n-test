@@ -151,17 +151,14 @@ clean: ## 一時ファイルとログを削除
 
 # 開発支援コマンド
 .PHONY: generate-spec
-generate-spec: ## 仕様書テンプレートを生成 (make generate-spec WORKFLOW=name SPEC_ID=001)
-	@if [ -z "$(WORKFLOW)" ] || [ -z "$(SPEC_ID)" ]; then \
-		echo "Error: WORKFLOW and SPEC_ID parameters are required"; \
-		echo "Usage: make generate-spec WORKFLOW=workflow_name SPEC_ID=001"; \
-		exit 1; \
-	fi
-	@echo "Generating specification template for $(WORKFLOW)..."
-	@sed "s/XXX/$(SPEC_ID)/g; s/\[ワークフロー名\]/$(WORKFLOW)/g" \
-		templates/specifications/requirement-template.md > \
-		$(WORKFLOW_DIR)/specifications/requirements/REQ-$(SPEC_ID)_$(WORKFLOW).md
-	@echo "Specification template generated: REQ-$(SPEC_ID)_$(WORKFLOW).md"
+generate-spec: ## 仕様書テンプレートを生成 (Claude Commandを推奨)
+	@echo "⚠️  この機能はClaude Commandに移行されました"
+	@echo "docs/claude-commands.md の「ワークフロー仕様書作成」を使用してください"
+	@echo ""
+	@echo "Claude Commandの利点:"
+	@echo "- 要件定義、設計、実装の3段階を自動生成"
+	@echo "- 内容に応じた適切なIDとファイル名の自動設定"
+	@echo "- より詳細で実用的な仕様書の作成"
 
 .PHONY: test
 test: ## テストを実行

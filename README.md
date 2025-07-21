@@ -81,19 +81,27 @@ n8n-claude-kit/
 
 ## ドキュメント
 
-- [n8nワークフロー開発ガイド](./docs/n8n-workflow-guide.md)
-- [Claude Codeコマンドテンプレート](./docs/claude-commands.md)
-- [ワークフロー仕様書作成ガイド](./docs/workflow-specifications.md)
-- [ワークフローアップロード機能](./docs/workflow-upload.md)
-- [セットアップ手順](./docs/setup.md)
+- **[Claude Code開発ガイド (CLAUDE.md)](./CLAUDE.md)** ⭐ Claude Code使用時の必読ガイド
+- [Claude Codeコマンドテンプレート](./docs/claude-commands.md) - 効率的な開発コマンド集
+- [セットアップ手順](./docs/setup.md) - 初期環境構築手順
+- [ワークフローアップロード機能](./docs/workflow-upload.md) - 自動デプロイ機能
+- [ワークフロー仕様書作成ガイド](./docs/workflow-specifications.md) - 仕様書管理システム
+- [n8nワークフロー開発ガイド](./docs/n8n-workflow-guide.md) - ワークフロー開発の詳細
 
 ## 開発フロー
 
-1. **要件定義**: テンプレートを使用した仕様書作成
-2. **設計**: Claude Codeでワークフロー設計
-3. **実装**: JSONベースのワークフロー生成
-4. **テスト**: 開発環境での動作確認
-5. **デプロイ**: Makefileを使用した自動アップロード
+### Claude Code使用時（推奨）
+1. **プロジェクト初期化**: Claude Commandでプロジェクト構造を自動生成
+2. **ワークフロー開発**: Claude Commandで仕様書から実装まで一貫して作成
+3. **テスト**: `make upload-dev` で開発環境にデプロイしてテスト
+4. **本番デプロイ**: `make upload-prod` で本番環境にデプロイ
+
+### 手動開発時
+1. **要件定義**: 仕様書テンプレートを使用
+2. **設計**: ワークフロー設計書作成
+3. **実装**: JSONワークフローファイル作成
+4. **テスト**: `make validate` でJSON検証後、`make upload-dev` でテスト
+5. **デプロイ**: `make upload-prod` で本番デプロイ
 
 ## 貢献
 
