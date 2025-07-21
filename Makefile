@@ -114,18 +114,18 @@ list-workflows: ## n8n上のワークフロー一覧を表示
 	@curl -s http://localhost:5678/rest/workflows | jq '.data[].name' || echo "Error: Cannot connect to n8n instance"
 
 .PHONY: validate
-validate: ## ワークフローJSONを検証 (make validate WORKFLOW=filename.json)
+validate: ## ワークフローJSONを検証 (make validate WORKFLOW=workflow-name/development/workflow.json)
 	@if [ -z "$(WORKFLOW)" ]; then \
 		echo "Error: WORKFLOW parameter is required"; \
-		echo "Usage: make validate WORKFLOW=filename.json"; \
+		echo "Usage: make validate WORKFLOW=workflow-name/development/workflow.json"; \
 		exit 1; \
 	fi
 	@echo "Validating workflow: $(WORKFLOW)"
-	@if [ ! -f "$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" ]; then \
-		echo "✗ File not found: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"; \
+	@if [ ! -f "$(WORKFLOW_DIR)/$(WORKFLOW)" ]; then \
+		echo "✗ File not found: $(WORKFLOW_DIR)/$(WORKFLOW)"; \
 		exit 1; \
 	fi
-	@jq empty "$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
+	@jq empty "$(WORKFLOW_DIR)/$(WORKFLOW)" && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
 
 # バックアップコマンド
 .PHONY: backup
@@ -192,12 +192,12 @@ upload: ## ワークフローをアップロード (make upload WORKFLOW=filenam
 		echo "Usage: make upload WORKFLOW=filename.json [ENV=dev]"; \
 		exit 1; \
 	fi
-	@if [ ! -f "$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" ]; then \
-		echo "✗ File not found: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"; \
+	@if [ ! -f "$(WORKFLOW_DIR)/$(WORKFLOW)" ]; then \
+		echo "✗ File not found: $(WORKFLOW_DIR)/$(WORKFLOW)"; \
 		exit 1; \
 	fi
-	@echo "Uploading workflow to $(ENV) environment..."
-	@echo "File: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"
+	@echo "Uploading workflow..."
+	@echo "File: $(WORKFLOW_DIR)/$(WORKFLOW)"
 	@if [ "$(ENV)" = "development" ]; then \
 		CONFIG_FILE="$(CONFIG_DIR)/dev.env"; \
 	else \
@@ -209,7 +209,7 @@ upload: ## ワークフローをアップロード (make upload WORKFLOW=filenam
 		if curl -f -s -X POST \
 			-H "X-N8N-API-KEY: $$N8N_API_KEY" \
 			-H "Content-Type: application/json" \
-			-d @"$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" \
+			-d @"$(WORKFLOW_DIR)/$(WORKFLOW)" \
 			"$$N8N_BASE_URL/api/v1/workflows" >/dev/null 2>&1; then \
 			echo "✅ Upload successful!"; \
 			echo "Check your n8n instance to see the imported workflow"; \
@@ -219,13 +219,13 @@ upload: ## ワークフローをアップロード (make upload WORKFLOW=filenam
 			curl -X POST \
 				-H "X-N8N-API-KEY: $$N8N_API_KEY" \
 				-H "Content-Type: application/json" \
-				-d @"$(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)" \
+				-d @"$(WORKFLOW_DIR)/$(WORKFLOW)" \
 				"$$N8N_BASE_URL/api/v1/workflows" 2>/dev/null | jq . || echo "Could not parse error response"; \
 			echo ""; \
 			echo "💡 Alternative: Manual import via n8n GUI"; \
 			echo "   1. Open $$N8N_BASE_URL"; \
 			echo "   2. New Workflow → Import from File"; \
-			echo "   3. Select: $(WORKFLOW_DIR)/$(ENV)/$(WORKFLOW)"; \
+			echo "   3. Select: $(WORKFLOW_DIR)/$(WORKFLOW)"; \
 		fi; \
 	else \
 		echo "❌ Configuration file not found: $$CONFIG_FILE"; \
@@ -233,9 +233,9 @@ upload: ## ワークフローをアップロード (make upload WORKFLOW=filenam
 	fi
 
 .PHONY: upload-dev
-upload-dev: ## 開発環境にアップロード (make upload-dev WORKFLOW=filename.json)
+upload-dev: ## 開発環境にアップロード (make upload-dev WORKFLOW=workflow-name/development/workflow.json)
 	@$(MAKE) upload WORKFLOW=$(WORKFLOW) ENV=development
 
 .PHONY: upload-prod  
-upload-prod: ## 本番環境にアップロード (make upload-prod WORKFLOW=filename.json)
+upload-prod: ## 本番環境にアップロード (make upload-prod WORKFLOW=workflow-name/production/workflow.json)
 	@$(MAKE) upload WORKFLOW=$(WORKFLOW) ENV=prod

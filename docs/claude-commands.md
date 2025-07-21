@@ -65,9 +65,9 @@ n8n開発で頻繁に使用するClaude Codeコマンドのテンプレート集
 - n8n 1.x API形式での出力
 - settings プロパティの追加
 - active プロパティの除外
-- workflows/development/ ディレクトリに保存
+- workflows/workflow-name/development/ ディレクトリに保存
 
-実装完了後は make upload-dev でテストできるようにしてください。」
+実装完了後は make upload-dev WORKFLOW=workflow-name/development/workflow.json でテストできるようにしてください。」
 ```
 
 ### 新規ワークフロー作成（仕様書付き）
@@ -97,7 +97,7 @@ API名: [API名]
 レスポンス処理: [データの変換や保存方法]
 エラーハンドリング: [HTTP エラー、レート制限など]
 
-仕様書から実装まで一式で作成し、workflows/development/ に配置してください。」
+仕様書から実装まで一式で作成し、workflows/workflow-name/ 配下に適切に配置してください。」
 ```
 
 ### データ同期ワークフロー

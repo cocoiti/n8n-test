@@ -17,10 +17,10 @@ make test-connection       # n8n API接続と認証をテスト
 
 ### ワークフロー開発
 ```bash
-make upload-dev WORKFLOW=filename.json     # 開発環境にワークフローをアップロード
-make upload-prod WORKFLOW=filename.json    # 本番環境にワークフローをアップロード
-make validate WORKFLOW=filename.json       # ワークフローJSONの構造を検証
-make list-workflows                         # n8nインスタンス上のワークフロー一覧を表示
+make upload-dev WORKFLOW=workflow-name/development/workflow.json   # 開発環境にアップロード
+make upload-prod WORKFLOW=workflow-name/production/workflow.json   # 本番環境にアップロード
+make validate WORKFLOW=workflow-name/development/workflow.json     # JSON構造を検証
+make list-workflows                                                # n8n上のワークフロー一覧
 ```
 
 ### 仕様管理
@@ -74,10 +74,19 @@ n8n 1.x ワークフローには以下が必要：
 ### ディレクトリ構造
 ```
 workflows/
-├── development/          # 開発ワークフロー（.json）
-├── production/          # 本番ワークフロー（.json）
-├── specifications/      # 構造化された仕様書
-└── templates/           # 再利用可能なワークフローテンプレート
+├── workflow-name/              # ワークフロー名ごと
+│   ├── README.md              # ワークフロー概要
+│   ├── specifications/        # 仕様書
+│   │   ├── requirements.md    # 要件定義書
+│   │   ├── design.md         # 設計書
+│   │   └── implementation.md  # 実装仕様書
+│   ├── development/          # 開発環境用
+│   │   └── workflow.json     # 開発用JSON
+│   ├── production/           # 本番環境用
+│   │   └── workflow.json     # 本番用JSON
+│   └── tests/               # テストファイル
+├── templates/               # 共通テンプレート
+└── shared/                 # 共通設定・ユーティリティ
 ```
 
 ## 開発ワークフロー
@@ -91,9 +100,9 @@ workflows/
 1. **Claude Command**: `docs/claude-commands.md`の「新規ワークフロー作成（仕様書付き）」を使用
    - 要件定義書、設計書、実装仕様書が自動生成される
    - ワークフローJSONファイルも同時に作成される
-2. **検証**: `make validate WORKFLOW=filename.json` でJSON構造をチェック
-3. **アップロードテスト**: `make upload-dev WORKFLOW=filename.json` を使用
-4. **デプロイ**: 本番デプロイには `make upload-prod WORKFLOW=filename.json` を使用
+2. **検証**: `make validate WORKFLOW=workflow-name/development/workflow.json` でJSON構造をチェック
+3. **アップロードテスト**: `make upload-dev WORKFLOW=workflow-name/development/workflow.json` を使用
+4. **デプロイ**: 本番デプロイには `make upload-prod WORKFLOW=workflow-name/production/workflow.json` を使用
 
 ### 既存仕様書からの実装時
 1. **Claude Command**: `docs/claude-commands.md`の「仕様書からワークフロー実装」を使用
